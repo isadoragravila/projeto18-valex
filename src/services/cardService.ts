@@ -170,6 +170,9 @@ export async function getBalanceByCardId(cardId: number) {
 
     const transactions = await paymentRepository.findByCardId(cardId);
     const recharges = await rechargeRepository.findByCardId(cardId);
+    
+    transactions.map(item => item.timestamp = dayjs(item.timestamp).format('DD/MM/YYYY'));
+    recharges.map(item => item.timestamp = dayjs(item.timestamp).format('DD/MM/YYYY'));  
 
     const transactionsAmount = transactions.reduce((prev, curr) => (prev + curr.amount), 0);
     const rechargesAmount = recharges.reduce((prev, curr) => (prev + curr.amount), 0);
