@@ -1,6 +1,8 @@
 import * as cardRepository from "../repositories/cardRepository";
 import * as companyRepository from "../repositories/companyRepository";
 import * as employeeRepository from "../repositories/employeeRepository";
+import * as paymentRepository from "../repositories/paymentRepository";
+import * as rechargeRepository from "../repositories/rechargeRepository";
 import { faker } from '@faker-js/faker';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -161,4 +163,18 @@ export async function blockUnblockCard(cardId: number, action: string, password:
     
         return 'Card unblocked';
     }
+}
+
+export async function getBalanceByCardId(cardId: number) {
+    await validateCardId(cardId);
+
+    const transactions = await paymentRepository.findByCardId(cardId);
+    const recharges = await rechargeRepository.findByCardId(cardId);
+
+    const transactionsAmount = transactions.reduce((prev, curr) => (prev + curr.amount), 0);
+    const rechargesAmount = recharges.reduce((prev, curr) => (prev + curr.amount), 0);
+
+    const balance = rechargesAmount - transactionsAmount;
+
+    return {balance, transactions, recharges};
 }

@@ -30,3 +30,11 @@ export async function blockUnblockCard(req: Request, res: Response) {
 
     return res.status(200).send(result);
 }
+
+export async function getBalanceByCardId(req: Request, res: Response) {
+    const cardId = Number(req.params.cardId);
+
+    const result = await cardService.getBalanceByCardId(cardId);
+
+    return res.status(200).send(result);
+}
