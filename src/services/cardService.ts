@@ -24,7 +24,7 @@ export async function createCard(apiKey: string | string[] | undefined, employee
         employeeId,
         number: cardNumber,
         cardholderName,
-        securityCode,
+        securityCode: securityCode.encryptedCVV,
         expirationDate,
         password: undefined,
         isVirtual: false,
@@ -35,7 +35,7 @@ export async function createCard(apiKey: string | string[] | undefined, employee
 
     await cardRepository.insert(cardData);
 
-    return cardData;
+    return {number: cardNumber, cardholderName, expirationDate, securityCode: securityCode.CVV};
 }
 
 async function validateApiKey(apiKey: string | string[] | undefined) {
@@ -81,7 +81,7 @@ function generateSecurityCode() {
 
     const encryptedCVV = cryptr.encrypt(CVV);
 
-    return encryptedCVV;
+    return { CVV, encryptedCVV };
 }
 
 export async function activateCard(employeeId: number, cardId: number, password: string, CVV: string) {
