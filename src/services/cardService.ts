@@ -93,26 +93,13 @@ export async function activateCard(employeeId: number, cardId: number, password:
 
     if (card.password) throw { code: "conflict_error", message: "This card is already active" };
 
-    validateSecurityCode(card.securityCode, CVV);
+    decryptPasswords(card.securityCode, CVV);
 
     if (password.length !== 4) throw { code: "unauthorized_error", message: "Password must have 4 digits" };
 
-    const cardData = {
-        employeeId: card.employeeId,
-        number: card.number,
-        cardholderName: card.cardholderName,
-        securityCode: card.securityCode,
-        expirationDate: card.expirationDate,
-        password: encryptPassword(password),
-        isVirtual: false,
-        originalCardId: undefined,
-        isBlocked: false,
-        type: card.type,
-    }
+    await cardRepository.update(cardId, { password: encryptPassword(password) });
 
-    await cardRepository.update(cardId, cardData);
-
-    return cardData;
+    return "Card activated";
 }
 
 async function validateCardId(cardId: number) {
@@ -131,12 +118,16 @@ function validateExpirationDate(expirationDate: string) {
     }
 }
 
-function validateSecurityCode(encryptedSecurityCode: string, CVV: string) {
-    const cryptr = new Cryptr(process.env.SECRET_KEY || "secret_key");
-    const decryptedCVV = cryptr.decrypt(encryptedSecurityCode);
+function decryptPasswords(encryptedCode: any, code: string) {
+    if (typeof encryptedCode !== 'string') {
+        throw { code: "unauthorized_error", message: "Wrong security code or password" };
+    }
 
-    if (decryptedCVV !== CVV) {
-        throw { code: "unauthorized_error", message: "Wrong security code" };
+    const cryptr = new Cryptr(process.env.SECRET_KEY || "secret_key");
+    const decryptedCode = cryptr.decrypt(encryptedCode);
+
+    if (decryptedCode !== code) {
+        throw { code: "unauthorized_error", message: "Wrong security code or password" };
     }
 }
 
@@ -146,4 +137,28 @@ function encryptPassword(password: string) {
     const encryptedPassword = cryptr.encrypt(password);
 
     return encryptedPassword;
+}
+
+export async function blockUnblockCard(cardId: number, action: string, password: string) {
+    const card = await validateCardId(cardId);
+
+    validateExpirationDate(card.expirationDate);
+
+    decryptPasswords(card.password, password);
+
+    if (action === "block") {
+        if (card.isBlocked) throw { code: "conflict_error", message: "This card is already blocked" };
+
+        await cardRepository.update(cardId, {isBlocked: true});
+    
+        return 'Card blocked';
+    }
+
+    if (action === "unblock") {
+        if (!card.isBlocked) throw { code: "conflict_error", message: "This card is already blocked" };
+
+        await cardRepository.update(cardId, {isBlocked: false});
+    
+        return 'Card unblocked';
+    }
 }
