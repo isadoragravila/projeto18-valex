@@ -120,7 +120,7 @@ export function validateExpirationDate(expirationDate: string) {
     }
 }
 
-function decryptPasswords(encryptedCode: any, code: string) {
+export function decryptPasswords(encryptedCode: any, code: string) {
     if (typeof encryptedCode !== 'string') {
         throw { code: "unauthorized_error", message: "Wrong security code or password" };
     }
@@ -168,9 +168,15 @@ export async function blockUnblockCard(cardId: number, action: string, password:
 export async function getBalanceByCardId(cardId: number) {
     await validateCardId(cardId);
 
+    const result = await getTotalAmount(cardId);
+
+    return result;
+}
+
+export async function getTotalAmount(cardId: number) {
     const transactions = await paymentRepository.findByCardId(cardId);
     const recharges = await rechargeRepository.findByCardId(cardId);
-    
+
     transactions.map(item => item.timestamp = dayjs(item.timestamp).format('DD/MM/YYYY'));
     recharges.map(item => item.timestamp = dayjs(item.timestamp).format('DD/MM/YYYY'));  
 
@@ -179,5 +185,5 @@ export async function getBalanceByCardId(cardId: number) {
 
     const balance = rechargesAmount - transactionsAmount;
 
-    return {balance, transactions, recharges};
+    return { balance, transactions, recharges };
 }
