@@ -104,7 +104,7 @@ export async function activateCard(employeeId: number, cardId: number, password:
     return "Card activated";
 }
 
-async function validateCardId(cardId: number) {
+export async function validateCardId(cardId: number) {
     const card = await cardRepository.findById(cardId);
 
     if (!card) throw { code: "notfound_error", message: "Card isn't registered in the database" };
@@ -112,7 +112,7 @@ async function validateCardId(cardId: number) {
     return card;
 }
 
-function validateExpirationDate(expirationDate: string) {
+export function validateExpirationDate(expirationDate: string) {
     dayjs.extend(customParseFormat);
 
     if (dayjs().isAfter(dayjs(expirationDate, "MM/YY"))) {
