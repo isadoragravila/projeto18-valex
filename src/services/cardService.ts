@@ -3,6 +3,7 @@ import * as companyRepository from "../repositories/companyRepository";
 import * as employeeRepository from "../repositories/employeeRepository";
 import { faker } from '@faker-js/faker';
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import Cryptr from 'cryptr';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -13,7 +14,7 @@ export async function createCard(apiKey: string | string[] | undefined, employee
     const employee = await checkEmployeeAndCompany(employeeId, company.id);
 
     await checkTypeAndEmployee(type, employee.id);
-    
+
     const cardNumber = faker.finance.creditCardNumber('################');
     const cardholderName = generateCardName(employee.fullName);
     const expirationDate = dayjs().add(5, 'year').format('MM/YY');
@@ -81,4 +82,68 @@ function generateSecurityCode() {
     const encryptedCVV = cryptr.encrypt(CVV);
 
     return encryptedCVV;
+}
+
+export async function activateCard(employeeId: number, cardId: number, password: string, CVV: string) {
+    const card = await validateCardId(cardId);
+
+    if (employeeId !== card.employeeId) throw { code: "unauthorized_error", message: "This card doesn't belong to the employee" };
+
+    validateExpirationDate(card.expirationDate);
+
+    if (card.password) throw { code: "conflict_error", message: "This card is already active" };
+
+    validateSecurityCode(card.securityCode, CVV);
+
+    if (password.length !== 4) throw { code: "unauthorized_error", message: "Password must have 4 digits" };
+
+    const cardData = {
+        employeeId: card.employeeId,
+        number: card.number,
+        cardholderName: card.cardholderName,
+        securityCode: card.securityCode,
+        expirationDate: card.expirationDate,
+        password: encryptPassword(password),
+        isVirtual: false,
+        originalCardId: undefined,
+        isBlocked: false,
+        type: card.type,
+    }
+
+    await cardRepository.update(cardId, cardData);
+
+    return cardData;
+}
+
+async function validateCardId(cardId: number) {
+    const card = await cardRepository.findById(cardId);
+
+    if (!card) throw { code: "notfound_error", message: "Card isn't registered in the database" };
+
+    return card;
+}
+
+function validateExpirationDate(expirationDate: string) {
+    dayjs.extend(customParseFormat);
+
+    if (dayjs().isAfter(dayjs(expirationDate, "MM/YY"))) {
+        throw { code: "conflict_error", message: "This card is expired" };
+    }
+}
+
+function validateSecurityCode(encryptedSecurityCode: string, CVV: string) {
+    const cryptr = new Cryptr(process.env.SECRET_KEY || "secret_key");
+    const decryptedCVV = cryptr.decrypt(encryptedSecurityCode);
+
+    if (decryptedCVV !== CVV) {
+        throw { code: "unauthorized_error", message: "Wrong security code" };
+    }
+}
+
+function encryptPassword(password: string) {
+    const cryptr = new Cryptr(process.env.SECRET_KEY || "secret_key");
+
+    const encryptedPassword = cryptr.encrypt(password);
+
+    return encryptedPassword;
 }
