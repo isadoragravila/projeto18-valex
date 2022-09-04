@@ -7,6 +7,7 @@ import { faker } from '@faker-js/faker';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import Cryptr from 'cryptr';
+import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -95,7 +96,7 @@ export async function activateCard(employeeId: number, cardId: number, password:
 
     if (card.password) throw { code: "conflict_error", message: "This card is already active" };
 
-    decryptPasswords(card.securityCode, CVV);
+    decryptSecurityCode(card.securityCode, CVV);
 
     if (password.length !== 4) throw { code: "unauthorized_error", message: "Password must have 4 digits" };
 
@@ -120,25 +121,29 @@ export function validateExpirationDate(expirationDate: string) {
     }
 }
 
-export function decryptPasswords(encryptedCode: any, code: string) {
-    if (typeof encryptedCode !== 'string') {
-        throw { code: "unauthorized_error", message: "Wrong security code or password" };
-    }
-
+export function decryptSecurityCode(encryptedCode: string, code: string) {
     const cryptr = new Cryptr(process.env.SECRET_KEY || "secret_key");
     const decryptedCode = cryptr.decrypt(encryptedCode);
 
     if (decryptedCode !== code) {
-        throw { code: "unauthorized_error", message: "Wrong security code or password" };
+        throw { code: "unauthorized_error", message: "Wrong security code" };
     }
 }
 
 function encryptPassword(password: string) {
-    const cryptr = new Cryptr(process.env.SECRET_KEY || "secret_key");
-
-    const encryptedPassword = cryptr.encrypt(password);
+    const encryptedPassword = bcrypt.hashSync(password, 10);
 
     return encryptedPassword;
+}
+
+export function decryptPasswords(encryptedCode: any, code: string) {
+    if (typeof encryptedCode !== 'string') {
+        throw { code: "unauthorized_error", message: "This card isn't active" };
+    }
+
+    if (!bcrypt.compareSync(code, encryptedCode)) {
+        throw { code: "unauthorized_error", message: "Wrong password" };
+    }
 }
 
 export async function blockUnblockCard(cardId: number, action: string, password: string) {
@@ -157,7 +162,7 @@ export async function blockUnblockCard(cardId: number, action: string, password:
     }
 
     if (action === "unblock") {
-        if (!card.isBlocked) throw { code: "conflict_error", message: "This card is already blocked" };
+        if (!card.isBlocked) throw { code: "conflict_error", message: "This card is already unblocked" };
 
         await cardRepository.update(cardId, {isBlocked: false});
     
