@@ -9,3 +9,11 @@ export async function purchaseItem(req: Request, res: Response) {
 
     return res.status(201).send(result);
 }
+
+export async function onlinePurchase(req: Request, res: Response) {
+    const { cardNumber, cardholderName, expirationDate, CVV, businessId, amount } = req.body;
+
+    const result = await paymentService.onlinePurchase(cardNumber, cardholderName, expirationDate, CVV, businessId, amount);
+
+    return res.status(201).send(result);
+}
