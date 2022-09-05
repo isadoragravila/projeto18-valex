@@ -4,6 +4,8 @@ import * as rechargeRepository from '../repositories/rechargeRepository';
 export async function rechargeCard (cardId: number, amount: number) {
     const card = await validateCardId(cardId);
 
+    if (card.isVirtual) throw { code:"unauthorized_error", message: "This card is virtual. It's not possible to recharge it" };
+
     if (!card.password) throw { code: "unauthorized_error", message: "This card isn't active" };
 
     validateExpirationDate(card.expirationDate);
