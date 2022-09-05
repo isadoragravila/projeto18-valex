@@ -9,7 +9,7 @@ const router = Router();
 
 router.post('/card/create/:employeeId', validateSchema(cardTypeSchema), createCard);
 router.post('/card/activate/:employeeId/:cardId', validateSchema(passwordCVVSchema), activateCard);
-router.post('/card/:action/:cardId', validateSchema(passwordSchema), blockUnblockCard);
+router.put('/card/:action/:cardId', validateSchema(passwordSchema), blockUnblockCard);
 router.get('/card/balance/:cardId', getBalanceByCardId);
 
 export default router;

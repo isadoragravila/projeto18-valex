@@ -155,6 +155,8 @@ export async function blockUnblockCard(cardId: number, action: string, password:
 
     decryptPasswords(card.password, password);
 
+    if (action !== "block" && action !== "unblock") throw { code: "notfound_error", message: "Route not found" }
+
     if (action === "block") {
         if (card.isBlocked) throw { code: "conflict_error", message: "This card is already blocked" };
 
