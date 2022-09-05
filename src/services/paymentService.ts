@@ -6,6 +6,8 @@ import * as cardRepository from '../repositories/cardRepository';
 export async function purchaseItem (cardId: number, password: string, businessId: number, amount: number) {
     const card = await validateCardId(cardId);
 
+    if (card.isVirtual) throw { code:"unauthorized_error", message: "This card is virtual. It's not possible to use it in POS purchases" };
+
     decryptPasswords(card.password, password);
 
     return validatePurchases(card, cardId, businessId, amount);
