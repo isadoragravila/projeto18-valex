@@ -41,7 +41,7 @@ export async function createCard(apiKey: string | string[] | undefined, employee
     return {number: cardNumber, cardholderName, expirationDate, securityCode: securityCode.CVV};
 }
 
-async function validateApiKey(apiKey: string | string[] | undefined) {
+export async function validateApiKey(apiKey: string | string[] | undefined) {
     const company = await companyRepository.findByApiKey(apiKey);
 
     if (!company) throw { code: "unauthorized_error", message: "Invalid API Key" };
@@ -49,7 +49,7 @@ async function validateApiKey(apiKey: string | string[] | undefined) {
     return company;
 }
 
-async function checkEmployeeAndCompany(employeeId: number, companyId: number) {
+export async function checkEmployeeAndCompany(employeeId: number, companyId: number) {
     const employee = await employeeRepository.findById(employeeId);
 
     if (!employee) throw { code: "notfound_error", message: "User isn't an employee registered in the database" };
