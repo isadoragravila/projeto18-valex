@@ -90,6 +90,8 @@ export function generateSecurityCode() {
 export async function activateCard(employeeId: number, cardId: number, password: string, CVV: string) {
     const card = await validateCardId(cardId);
 
+    if (card.isVirtual) throw { code:"unauthorized_error", message: "This card is virtual. It's not possible do activate" };
+
     if (employeeId !== card.employeeId) throw { code: "unauthorized_error", message: "This card doesn't belong to the employee" };
 
     validateExpirationDate(card.expirationDate);
