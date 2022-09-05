@@ -77,7 +77,7 @@ function generateCardName(name: string) {
     return cardNameArray.join(" ");
 }
 
-function generateSecurityCode() {
+export function generateSecurityCode() {
     const cryptr = new Cryptr(process.env.SECRET_KEY || "secret_key");
 
     const CVV = faker.finance.creditCardCVV();

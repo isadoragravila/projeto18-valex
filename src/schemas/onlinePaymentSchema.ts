@@ -1,7 +1,7 @@
 import joi from "joi";
 
 const onlinePaymentSchema = joi.object({
-    cardNumber: joi.string().length(16).required(),
+    cardNumber: joi.string().min(16).max(19).required(),
     cardholderName: joi.string().required(),
     expirationDate: joi.string().required(),
     CVV: joi.string().length(3).required(),
