@@ -19,6 +19,13 @@ export async function onlinePurchase(cardNumber:string, cardholderName: string, 
 
     decryptSecurityCode(card.securityCode, CVV);
 
+    if (card.isVirtual) {
+        const cardId = Number(card.originalCardId);
+        const originalCard = await validateCardId(cardId);
+
+        return validatePurchases(originalCard, originalCard.id, businessId, amount);
+    }
+
     return validatePurchases(card, card.id, businessId, amount);
 }
 
