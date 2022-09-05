@@ -9,3 +9,12 @@ export async function createVirtualCard(req: Request, res: Response) {
 
     return res.status(201).send(result);
 }
+
+export async function deleteVirtualCard(req: Request, res: Response) {
+    const cardId = Number(req.params.cardId);
+    const { password } = req.body;
+
+    const result = await virtualCardService.deleteVirtualCard(cardId, password);
+
+    return res.status(200).send(result);
+}

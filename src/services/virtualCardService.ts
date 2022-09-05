@@ -29,3 +29,15 @@ export async function createVirtualCard(cardId: number, password: string) {
     
     return {number: cardNumber, cardholderName: card.cardholderName, expirationDate, securityCode: securityCode.CVV};
 }
+
+export async function deleteVirtualCard(cardId: number, password: string) {
+    const card = await validateCardId(cardId);
+
+    if (!card.isVirtual) throw { code: "unauthorized_error", message: "This card isn't virtual. It's not possible to delete this card" }
+
+    decryptPasswords(card.password, password);
+
+    await cardRepository.remove(cardId);
+
+    return "Virtual card deleted";
+}
